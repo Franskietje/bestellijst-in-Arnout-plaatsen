@@ -19,6 +19,7 @@ loginButton.addEventListener("click", async (e) => {
             sessionStorage.setItem('bearerToken', bT);
             localStorage.setItem('userName', loginForm.username.value);
             localStorage.setItem('passWord', loginForm.password.value);
+            localStorage.setItem('fullName', await getFullName(bT));
             document.location.href = 'index.html';
             // Redirect user or show success message
         } else {
@@ -60,3 +61,28 @@ async function getBearerToken() {
     return token;
 }
 
+async function getFullName(bT) {
+    const url = 'https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/personen_form_details/_find';
+    var raw = JSON.stringify({
+        "query": [
+            {
+                "account_naam": loginForm.username.value
+            }]}
+       ) ;
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + bT
+        },
+        body:raw
+    };
+
+    const response = await fetch(url, options);
+
+    const data = await response.json();
+    console.log (data)
+    const fullName = data.response.data[0].fieldData.voornaam_naam_c;
+
+    return fullName;
+}

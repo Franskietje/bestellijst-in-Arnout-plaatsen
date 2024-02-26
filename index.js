@@ -5,7 +5,7 @@ var excelData = [];
 var apiDossier2Artikelen = [];
 var apiStanden = [];
 var finalDataArray = [];
-const dossierNummer = 3534;
+
 const mySelect = document.getElementById('zoekDossiers');
 
 //#endregion
@@ -174,7 +174,7 @@ function generateFinalTable() {
 //#region section 4: "manipulate finalDataArray ,send orders to Arnout and create controletabel"
 
 async function mapDataArray() {
-
+    var dossierNummer = sessionStorage.getItem('dossierID');
     apiStanden = await fetchapiStanden();
     const standnummerIndex = finalDataArray[0].findIndex(header => header.toLowerCase() === "standnummer");
     // Check if standnummer column exists
@@ -344,7 +344,7 @@ async function processAllOrdersAndUpdateTable() {
 
 async function fetchapiDossier2Artikelen() {
 
-
+    var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify({
         "query": [
             {
@@ -384,7 +384,7 @@ async function fetchapiDossier2Artikelen() {
 }
 
 async function fetchapiStanden() {
-
+    var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify({
         "query": [
             {
@@ -429,7 +429,7 @@ async function fetchapiStanden() {
 }
 
 async function makeNewStanden(standNummer,standNaam) {
-
+    var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify(
         {
             "fieldData":
@@ -464,6 +464,7 @@ async function makeNewStanden(standNummer,standNaam) {
 }
 
 async function addDossier2Artikel(standID,aantal,dossier2artikelID) {
+    var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify(
         {
             "fieldData":
@@ -536,6 +537,28 @@ function openPage() {
     }
 }
 
+const refreshButton = document.getElementById('refresh');
+
+refreshButton.addEventListener('click', function () {
+    location.reload()
+})
+
+
+const clearLocalStorageButton = document.getElementById('logout');
+
+//log uit (verwijder localstorage)
+clearLocalStorageButton.addEventListener('click', function () {
+    clearLocalStorageButton.disabled = true;
+    
+    // Clear specific local storage items related to user session
+    localStorage.removeItem('userName');
+    localStorage.removeItem('passWord');
+    sessionStorage.clear(); // Clear session storage
+    
+    // Redirect to login page
+    document.location.href = 'login-page.html';
+});
+
 //#endregion
 
 
@@ -546,17 +569,18 @@ async function loadDossiers() {
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "Bearer " + bearerToken);
     var select = mySelect;
+    var fullName = localStorage.getItem('fullName');
 
     var today = new Date();
-    var todayMin3M = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate()).toLocaleDateString('en-US');
-    var todayPlus3M = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate()).toLocaleDateString('en-US');
-    var dateString = todayMin3M + ".." + todayPlus3M;
+    var todayMin1M = new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toLocaleDateString('en-US');
+    var dateString = todayMin1M + ".." ;
+    console.log(dateString);
 
     var raw = JSON.stringify({
         "query": [
             {
-                "projectleider1_ae": "Dhaenens Sven"},{
-                "projectleider2_ae": "Dhaenens Sven"
+                "projectleider1_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString},{
+                "projectleider2_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString
             }
         ],
         "sort": [
@@ -567,6 +591,7 @@ async function loadDossiers() {
         ],
         "limit": "500"
     });
+    console.log (raw);
 
     var requestOptions = {
         method: 'POST',
@@ -619,9 +644,9 @@ mySelect.addEventListener('change', async function(){
 
     btn.className = "button1 button";
     btn.addEventListener('click', function () {
-        sessionStorage.removeItem('postitdetail');
-        document.location.href = 'ingave.html';
-    });
+        document.getElementById('load-excel').style.display = 'block';
+        document.getElementById ('input-excel').style.display = 'block';
+        });
 
 
 
@@ -632,22 +657,3 @@ mySelect.addEventListener('change', async function(){
 });
 
 
-const clearLocalStorageButton = document.getElementById('logout');
-
-//------------------------------------------------------------------
-//ADD EVENTLISTENERS
-
-//log uit (verwijder localstorage)
-clearLocalStorageButton.addEventListener('click', function () {
-    clearLocalStorageButton.disabled = true;
-    
-    // Optionally, inform the server about the logout
-    
-    // Clear specific local storage items related to user session
-    localStorage.removeItem('userName');
-    localStorage.removeItem('passWord');
-    sessionStorage.clear(); // Clear session storage
-    
-    // Redirect to login page
-    document.location.href = 'login-page.html';
-});
