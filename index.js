@@ -524,3 +524,16 @@ async function getBearerToken() {
 
 //#endregion
 
+//#region Section 6 : "Misc. Functions"
+
+function openPage() {
+    if (localStorage.getItem('userName') && localStorage.getItem('passWord')) {
+        document.location.href = 'index.html';
+        
+    } else {
+        document.location.href = 'login-page.html';
+    }
+}
+
+//#endregion
+
