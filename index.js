@@ -6,6 +6,7 @@ var apiDossier2Artikelen = [];
 var apiStanden = [];
 var finalDataArray = [];
 const dossierNummer = 3534;
+const mySelect = document.getElementById('zoekDossiers');
 
 //#endregion
 
@@ -528,7 +529,7 @@ async function getBearerToken() {
 
 function openPage() {
     if (localStorage.getItem('userName') && localStorage.getItem('passWord')) {
-        document.location.href = 'index.html';
+        loadDossiers();
         
     } else {
         document.location.href = 'login-page.html';
@@ -537,13 +538,14 @@ function openPage() {
 
 //#endregion
 
-const mySelect = document.getElementById('zoekDossiers');
 
-mySelect.addEventListener('click', async function () {
+
+async function loadDossiers() {
     var bearerToken = await getBearerToken();
     var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "Bearer " + bearerToken);
+    var select = mySelect;
 
     var today = new Date();
     var todayMin3M = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate()).toLocaleDateString('en-US');
@@ -553,12 +555,17 @@ mySelect.addEventListener('click', async function () {
     var raw = JSON.stringify({
         "query": [
             {
-                "datum_beurs_van": dateString
+                "projectleider1_ae": "Dhaenens Sven"},{
+                "projectleider2_ae": "Dhaenens Sven"
             }
         ],
-        sort: [
-            { fieldName: 'dossiernaam_c', sortOrder: 'ascend' }
-        ]
+        "sort": [
+            {
+                "fieldName": "dossiernaam",
+                "sortOrder": "ascend"
+            }
+        ],
+        "limit": "500"
     });
 
     var requestOptions = {
@@ -569,17 +576,16 @@ mySelect.addEventListener('click', async function () {
     };
 
     try {
-        const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_list Kopie/_find", requestOptions);
+        const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_form_detail/_find", requestOptions);
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Network response was not ok'& response);
         }
         const data = await response.json();
         if (data && data.response && data.response.data && data.response.data.length > 0) {
-            var select = document.getElementById("zoekDossiers");
             data.response.data.forEach(dossier => {
                 const option = document.createElement('option');
                 option.value = dossier.fieldData._k1_dossier_ID;
-                option.text = dossier.fieldData.dossiernaam_c;
+                option.text = dossier.fieldData.dossiernaam;
                 select.appendChild(option);
             });
         } else {
@@ -591,7 +597,7 @@ mySelect.addEventListener('click', async function () {
     }
 
     
-});
+}
 
 //maak knop voor het gekozen dossier in SELECT
 mySelect.addEventListener('change', async function(){

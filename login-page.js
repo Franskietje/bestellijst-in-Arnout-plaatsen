@@ -12,45 +12,9 @@ input.addEventListener('input', () => {
 
 loginButton.addEventListener("click", (e) => {
     e.preventDefault();
-    const username = loginForm.username.value;
-    const password = loginForm.password.value;
-    const auth = username + ':' + password;
-    const encodedAuth = btoa(auth);
-    localStorage.setItem('userName', username);
-    localStorage.setItem('passWord', password);
-
-    const url = 'https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/sessions';
-
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Basic ' + encodedAuth
-        }
-    };
-
-
-
-    fetch(url, options)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(result => {
-            // authentication successful
-            sessionStorage.setItem('bearerToken', (result.response.token));
-            document.location.href = 'index.html';
-
-        })
-        .catch(error => {
-            // authentication failed
-            console.error('Error fetching data: ', error);
-            loginErrorMsg.style.opacity = 1;
-        });
+    var bT = getBearerToken();
+    sessionStorage.setItem('bearerToken', bT);
     
-
 
 }) 
 
