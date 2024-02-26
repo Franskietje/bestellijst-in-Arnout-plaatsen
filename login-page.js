@@ -10,15 +10,29 @@ input.addEventListener('input', () => {
 });
 
 
-loginButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    var bT = getBearerToken();
-    sessionStorage.setItem('bearerToken', bT);
-    
+loginButton.addEventListener("click", async (e) => {
+    e.preventDefault(); // Prevent form submission
 
-}) 
-
-
+    try {
+        const bT = await getBearerToken(); // Await the promise resolved value
+        if (bT) {
+            sessionStorage.setItem('bearerToken', bT);
+            localStorage.setItem('userName', loginForm.username.value);
+            localStorage.setItem('passWord', loginForm.password.value);
+            document.location.href = 'index.html';
+            // Redirect user or show success message
+        } else {
+            // Handle login failure (e.g., show error message)
+            loginErrorMsg.style.opacity = 1;
+            loginErrorMsg.textContent = "Login failed. Please check your username and password.";
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        // Show a more generic error message in production use
+        loginErrorMsg.style.opacity = 1;
+        loginErrorMsg.textContent = "An error occurred. Please try again later.";
+    }
+});
 
 
 async function getBearerToken() {
@@ -45,3 +59,4 @@ async function getBearerToken() {
 
     return token;
 }
+

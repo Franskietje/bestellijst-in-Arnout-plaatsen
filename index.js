@@ -630,3 +630,24 @@ mySelect.addEventListener('change', async function(){
 
 
 });
+
+
+const clearLocalStorageButton = document.getElementById('logout');
+
+//------------------------------------------------------------------
+//ADD EVENTLISTENERS
+
+//log uit (verwijder localstorage)
+clearLocalStorageButton.addEventListener('click', function () {
+    clearLocalStorageButton.disabled = true;
+    
+    // Optionally, inform the server about the logout
+    
+    // Clear specific local storage items related to user session
+    localStorage.removeItem('userName');
+    localStorage.removeItem('passWord');
+    sessionStorage.clear(); // Clear session storage
+    
+    // Redirect to login page
+    document.location.href = 'login-page.html';
+});
