@@ -537,3 +537,90 @@ function openPage() {
 
 //#endregion
 
+const mySelect = document.getElementById('zoekDossiers');
+
+mySelect.addEventListener('click', async function () {
+    var bearerToken = await getBearerToken();
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", "Bearer " + bearerToken);
+
+    var today = new Date();
+    var todayMin3M = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate()).toLocaleDateString('en-US');
+    var todayPlus3M = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate()).toLocaleDateString('en-US');
+    var dateString = todayMin3M + ".." + todayPlus3M;
+
+    var raw = JSON.stringify({
+        "query": [
+            {
+                "datum_beurs_van": dateString
+            }
+        ],
+        sort: [
+            { fieldName: 'dossiernaam_c', sortOrder: 'ascend' }
+        ]
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    try {
+        const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_list Kopie/_find", requestOptions);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        if (data && data.response && data.response.data && data.response.data.length > 0) {
+            var select = document.getElementById("zoekDossiers");
+            data.response.data.forEach(dossier => {
+                const option = document.createElement('option');
+                option.value = dossier.fieldData._k1_dossier_ID;
+                option.text = dossier.fieldData.dossiernaam_c;
+                select.appendChild(option);
+            });
+        } else {
+            console.log("No data found or error fetching data");
+        }
+
+    } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+    }
+
+    
+});
+
+//maak knop voor het gekozen dossier in SELECT
+mySelect.addEventListener('change', async function(){
+    
+    var container = document.getElementById("btn-container");
+    container.innerHTML="";
+    var select = mySelect;
+    var selectValue = select.value;
+
+    var selectedOption = select.options[select.selectedIndex].text;
+
+    sessionStorage.setItem('dossierNaam', selectedOption);
+    sessionStorage.setItem('dossierID',selectValue);
+
+
+    // Create a button element
+    var btn = document.createElement("button");
+    btn.innerHTML = selectedOption;
+
+    btn.className = "button1 button";
+    btn.addEventListener('click', function () {
+        sessionStorage.removeItem('postitdetail');
+        document.location.href = 'ingave.html';
+    });
+
+
+
+    // Append the button to the container element
+    container.appendChild(btn);
+
+
+});

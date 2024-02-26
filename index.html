@@ -21,10 +21,20 @@
 </head>
 <body onload="openPage()">
 
+    
 
+    <div id="zoekAndereDossiers">
+        <label for="zoekDossiers">Zoek Dossier</label>
+        <select id="zoekDossiers" name="zoekDossiers">
+            <option value="00">----------</option>
 
-    <input type="file" id="input-excel" accept=".xlsx, .xls" />
-    <button id="load-excel">Load Excel Data</button>
+        </select>
+        <div id="btn-container">
+
+        </div><br>
+    </div>
+    <input type="file" id="input-excel" accept=".xlsx, .xls"  style="display:none;">
+    <button id="load-excel" style="display:none;">Load Excel Data</button>
     <div id="table-container"></div>
     <button id="create-final-table" style="display:none;">Generate Final Table</button>
     <div id="final-table-container"></div>
