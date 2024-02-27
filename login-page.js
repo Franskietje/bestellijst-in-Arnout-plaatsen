@@ -2,7 +2,7 @@ const loginForm = document.getElementById("login-form");
 const loginButton = document.getElementById("login-form-submit");
 const loginErrorMsg = document.getElementById("login-error-msg");
 
-const form = document.querySelector('form');
+//const form = document.querySelector('form');
 const input = document.querySelector('input');
 
 input.addEventListener('input', () => {
@@ -81,7 +81,7 @@ async function getFullName(bT) {
     const response = await fetch(url, options);
 
     const data = await response.json();
-    console.log (data)
+    //console.log (data)
     const fullName = data.response.data[0].fieldData.voornaam_naam_c;
 
     return fullName;

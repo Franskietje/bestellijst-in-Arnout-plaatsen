@@ -44,7 +44,7 @@ async function readExcelFile() {
 
         // Generate Array with uniqueStanden and apiStanden
         var uniqueStanden = getUniqueValuesFromColumn(excelData.slice(1), 0); // Excluding header
-        console.log (apiStanden);
+        //console.log (apiStanden);
         if (apiStanden && apiStanden.response && apiStanden.response.data && apiStanden.response.data.length > 0){
             var excludeSet = new Set(apiStanden.response.data.map(stand => +stand.fieldData.standNrT));
             uniqueStanden = uniqueStanden.filter(stand => !excludeSet.has(+stand));
@@ -61,10 +61,10 @@ async function readExcelFile() {
             return [standnummer, standnummerToStandnaam.get(standnummer) || 'Unknown'];
         });
         
-        console.log(uniqueStanden);
+        //console.log(uniqueStanden);
 
         processAllStands(uniqueStanden).then(() => {
-            console.log('Finished processing all stands.');
+            //console.log('Finished processing all stands.');
         });
 
         
@@ -121,7 +121,7 @@ async function processAllStands(uniqueStanden) {
         const [standnummer, standnaam] = row;
         await makeNewStanden(standnummer, standnaam);
     }
-    console.log('All stands processed.');
+    //console.log('All stands processed.');
 }
 
 //#endregion
@@ -161,7 +161,7 @@ function generateFinalTable() {
     });
 
     // Log or further process finalDataArray as needed
-    console.log(finalDataArray);
+    //console.log(finalDataArray);
 
     
 
@@ -243,7 +243,7 @@ async function mapDataArray() {
 
 
 
-    console.log(finalDataArray);
+    //console.log(finalDataArray);
 
     //await readExcelFile(); // This should populate excelData and finalDataArray
     displayTableWithApiResponseColumn(); // Display table first
@@ -333,7 +333,7 @@ async function processAllOrdersAndUpdateTable() {
         const apiResponseCell = document.getElementById(`api-response-${i}`);
         apiResponseCell.textContent = apiResponse || 'No response'; // Update with actual API response
     }
-    console.log('All orders processed and table updated.');
+    //console.log('All orders processed and table updated.');
 }
 
 
@@ -416,10 +416,10 @@ async function fetchapiStanden() {
         const response = await fetch(apiUrl, requestOptions);
         const data = await response.json();
         if (data.messages[0].code =="0"){
-        console.log ("yow");
+        //console.log ("yow");
             return data; 
         }else{
-            console.log("nieyow")
+            //console.log("nieyow")
             return [];
         }// Assuming the API returns an array of objects with id and name
     } catch (error) {
@@ -491,7 +491,7 @@ async function addDossier2Artikel(standID,aantal,dossier2artikelID) {
     try {
         const response = await fetch(apiUrl, requestOptions);
         const data = await response.json();
-        console.log (data.messages[0]);
+        //console.log (data.messages[0]);
         return data.messages[0].message; // Assuming the API returns an array of objects with id and name
     } catch (error) {
         console.error('Error fetching API data:', error);
@@ -574,7 +574,7 @@ async function loadDossiers() {
     var today = new Date();
     var todayMin1M = new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toLocaleDateString('en-US');
     var dateString = todayMin1M + ".." ;
-    console.log(dateString);
+    //console.log(dateString);
 
     var raw = JSON.stringify({
         "query": [
@@ -591,7 +591,7 @@ async function loadDossiers() {
         ],
         "limit": "500"
     });
-    console.log (raw);
+    //console.log (raw);
 
     var requestOptions = {
         method: 'POST',
@@ -614,7 +614,7 @@ async function loadDossiers() {
                 select.appendChild(option);
             });
         } else {
-            console.log("No data found or error fetching data");
+            //("No data found or error fetching data");
         }
 
     } catch (error) {
@@ -655,5 +655,44 @@ mySelect.addEventListener('change', async function(){
 
 
 });
+
+
+document.getElementById('deleteRecordsBtn').addEventListener('click', async () => {
+    const layout = 'standen2artikelen_calc';
+    const baseURL = 'https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout';
+    
+    try {
+        // Assuming you have a way to securely get the token
+        const token = await getBearerToken();
+
+        // Find records to delete (adjust find query as needed)
+        const findResponse = await fetch(`${baseURL}/layouts/${layout}/_find`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: [{ "_k2_dossier_ID":3534}]
+            })
+        });
+        const findData = await findResponse.json();
+        console.log(findData);
+        // Delete records individually
+        for (let record of findData.response.data) {
+            const recordId = record.recordId;
+            await fetch(`${baseURL}/layouts/${layout}/records/${recordId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            console.log(`Deleted record ID: ${recordId}`);
+        }
+    } catch (error) {
+        console.error('There has been a problem with your operation:', error);
+    }
+});
+
+
+
 
 
