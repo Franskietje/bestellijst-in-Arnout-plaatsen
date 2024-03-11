@@ -10,7 +10,106 @@ const mySelect = document.getElementById('zoekDossiers');
 
 //#endregion
 
-//#region Section 2 : ==> Load Excel Data Button ==> "Handle Excel upload / Get apiData / fill initial table / make new stands in Arnout"
+//#region Section 2: vuld dossierSelect en add button when selected
+
+
+//vul dossierselect, op basis van PM en huidige datum -1 maand
+async function loadDossiers() {
+    var bearerToken = await getBearerToken();
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", "Bearer " + bearerToken);
+    var select = mySelect;
+    var fullName = localStorage.getItem('fullName');
+
+    var today = new Date();
+    var todayMin1M = new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toLocaleDateString('en-US');
+    var dateString = todayMin1M + ".." ;
+    //console.log(dateString);
+
+    var raw = JSON.stringify({
+        "query": [
+            {
+                "projectleider1_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString},{
+                "projectleider2_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString
+            }
+        ],
+        "sort": [
+            {
+                "fieldName": "dossiernaam",
+                "sortOrder": "ascend"
+            }
+        ],
+        "limit": "500"
+    });
+    //console.log (raw);
+
+    var requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: raw,
+        redirect: 'follow'
+    };
+
+    try {
+        const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_form_detail/_find", requestOptions);
+        if (!response.ok) {
+            throw new Error('Network response was not ok'& response);
+        }
+        const data = await response.json();
+        if (data && data.response && data.response.data && data.response.data.length > 0) {
+            data.response.data.forEach(dossier => {
+                const option = document.createElement('option');
+                option.value = dossier.fieldData._k1_dossier_ID;
+                option.text = dossier.fieldData.dossiernaam;
+                select.appendChild(option);
+            });
+        } else {
+            //("No data found or error fetching data");
+        }
+
+    } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+    }
+
+    
+}
+
+//maak knop voor het gekozen dossier in SELECT
+mySelect.addEventListener('change', async function(){
+    
+    var container = document.getElementById("btn-container");
+    container.innerHTML="";
+    var select = mySelect;
+    var selectValue = select.value;
+
+    var selectedOption = select.options[select.selectedIndex].text;
+
+    sessionStorage.setItem('dossierNaam', selectedOption);
+    sessionStorage.setItem('dossierID',selectValue);
+
+
+    // Create a button element
+    var btn = document.createElement("button");
+    btn.innerHTML = selectedOption;
+
+    btn.className = "button1 button";
+    btn.addEventListener('click', function () {
+        document.getElementById('load-excel').style.display = 'block';
+        document.getElementById ('input-excel').style.display = 'block';
+        });
+
+
+
+    // Append the button to the container element
+    container.appendChild(btn);
+
+
+});
+
+//#endregion
+
+//#region Section 3 : ==> Load Excel Data Button ==> "Handle Excel upload / Get apiData / fill initial table / make new stands in Arnout"
 
 
 document.getElementById('load-excel').addEventListener('click', function () {
@@ -126,7 +225,7 @@ async function processAllStands(uniqueStanden) {
 
 //#endregion
 
-//#region Section 3 : "Create finaldataArray "
+//#region Section 4 : "Create finaldataArray "
 
 document.getElementById('create-final-table').addEventListener('click', function () {
     generateFinalTable();
@@ -171,7 +270,7 @@ function generateFinalTable() {
 
 //#endregion
 
-//#region section 4: "manipulate finalDataArray ,send orders to Arnout and create controletabel"
+//#region section 5: "manipulate finalDataArray ,send orders to Arnout and create controletabel"
 
 async function mapDataArray() {
     var dossierNummer = sessionStorage.getItem('dossierID');
@@ -339,7 +438,7 @@ async function processAllOrdersAndUpdateTable() {
 
 //#endregion
 
-//#region Section 5 : "Handle all api calls"
+//#region Section 6 : "Handle all api calls"
 
 
 async function fetchapiDossier2Artikelen() {
@@ -472,7 +571,8 @@ async function addDossier2Artikel(standID,aantal,dossier2artikelID) {
                 "_k2_dossier_ID": dossierNummer,
                 "_k2_stand_ID": standID,
                 "_k2_dossier2artikel_ID": dossier2artikelID,
-                "aantal":aantal
+                "aantal":aantal,        
+                "_org0_sth1_ae2_auto3": "0"
             }
         });
     var myHeaders = new Headers();
@@ -526,8 +626,9 @@ async function getBearerToken() {
 
 //#endregion
 
-//#region Section 6 : "Misc. Functions"
+//#region Section 7 : "Misc. Functions"
 
+//open pagina (check of User+PW ingevuld zijn)
 function openPage() {
     if (localStorage.getItem('userName') && localStorage.getItem('passWord')) {
         loadDossiers();
@@ -537,16 +638,17 @@ function openPage() {
     }
 }
 
+//refresh pagina
 const refreshButton = document.getElementById('refresh');
 
 refreshButton.addEventListener('click', function () {
     location.reload()
 })
 
-
+//logout
 const clearLocalStorageButton = document.getElementById('logout');
 
-//log uit (verwijder localstorage)
+
 clearLocalStorageButton.addEventListener('click', function () {
     clearLocalStorageButton.disabled = true;
     
@@ -559,104 +661,7 @@ clearLocalStorageButton.addEventListener('click', function () {
     document.location.href = 'login-page.html';
 });
 
-//#endregion
-
-
-
-async function loadDossiers() {
-    var bearerToken = await getBearerToken();
-    var myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "Bearer " + bearerToken);
-    var select = mySelect;
-    var fullName = localStorage.getItem('fullName');
-
-    var today = new Date();
-    var todayMin1M = new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toLocaleDateString('en-US');
-    var dateString = todayMin1M + ".." ;
-    //console.log(dateString);
-
-    var raw = JSON.stringify({
-        "query": [
-            {
-                "projectleider1_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString},{
-                "projectleider2_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString
-            }
-        ],
-        "sort": [
-            {
-                "fieldName": "dossiernaam",
-                "sortOrder": "ascend"
-            }
-        ],
-        "limit": "500"
-    });
-    //console.log (raw);
-
-    var requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-    };
-
-    try {
-        const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_form_detail/_find", requestOptions);
-        if (!response.ok) {
-            throw new Error('Network response was not ok'& response);
-        }
-        const data = await response.json();
-        if (data && data.response && data.response.data && data.response.data.length > 0) {
-            data.response.data.forEach(dossier => {
-                const option = document.createElement('option');
-                option.value = dossier.fieldData._k1_dossier_ID;
-                option.text = dossier.fieldData.dossiernaam;
-                select.appendChild(option);
-            });
-        } else {
-            //("No data found or error fetching data");
-        }
-
-    } catch (error) {
-        console.error('There has been a problem with your fetch operation:', error);
-    }
-
-    
-}
-
-//maak knop voor het gekozen dossier in SELECT
-mySelect.addEventListener('change', async function(){
-    
-    var container = document.getElementById("btn-container");
-    container.innerHTML="";
-    var select = mySelect;
-    var selectValue = select.value;
-
-    var selectedOption = select.options[select.selectedIndex].text;
-
-    sessionStorage.setItem('dossierNaam', selectedOption);
-    sessionStorage.setItem('dossierID',selectValue);
-
-
-    // Create a button element
-    var btn = document.createElement("button");
-    btn.innerHTML = selectedOption;
-
-    btn.className = "button1 button";
-    btn.addEventListener('click', function () {
-        document.getElementById('load-excel').style.display = 'block';
-        document.getElementById ('input-excel').style.display = 'block';
-        });
-
-
-
-    // Append the button to the container element
-    container.appendChild(btn);
-
-
-});
-
-
+//delete records button
 document.getElementById('deleteRecordsBtn').addEventListener('click', async () => {
     const layout = 'standen2artikelen_calc';
     const baseURL = 'https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout';
@@ -673,7 +678,7 @@ document.getElementById('deleteRecordsBtn').addEventListener('click', async () =
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                query: [{ "_k2_dossier_ID":3534}]
+                query: [{ "_k2_dossier_ID":4458}]
             })
         });
         const findData = await findResponse.json();
@@ -691,6 +696,13 @@ document.getElementById('deleteRecordsBtn').addEventListener('click', async () =
         console.error('There has been a problem with your operation:', error);
     }
 });
+
+
+//#endregion
+
+
+
+
 
 
 
