@@ -692,7 +692,7 @@ document.getElementById('deleteRecordsBtn').addEventListener('click', async () =
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                query: [{ "_k2_dossier_ID": 4242 }]
+                query: [{ "_k2_dossier_ID": 4458 }]
             })
         });
         const findData = await findResponse.json();
