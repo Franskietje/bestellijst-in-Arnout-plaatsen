@@ -23,15 +23,16 @@ async function loadDossiers() {
     var fullName = localStorage.getItem('fullName');
 
     var today = new Date();
-    var todayMin1M = new Date(today.getFullYear(), today.getMonth() -1, today.getDate()).toLocaleDateString('en-US');
-    var dateString = todayMin1M + ".." ;
+    var todayMin1M = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()).toLocaleDateString('en-US');
+    var dateString = todayMin1M + "..";
     //console.log(dateString);
 
     var raw = JSON.stringify({
         "query": [
             {
-                "projectleider1_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString},{
-                "projectleider2_ae": fullName,"dossiers_dossiersdataCreate::type":"beurs","dossiers_dossiersdataCreate::datum_van":dateString
+                "projectleider1_ae": fullName, "dossiers_dossiersdataCreate::type": "beurs", "dossiers_dossiersdataCreate::datum_van": dateString
+            }, {
+                "projectleider2_ae": fullName, "dossiers_dossiersdataCreate::type": "beurs", "dossiers_dossiersdataCreate::datum_van": dateString
             }
         ],
         "sort": [
@@ -54,7 +55,7 @@ async function loadDossiers() {
     try {
         const response = await fetch("https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout/layouts/Dossiers_form_detail/_find", requestOptions);
         if (!response.ok) {
-            throw new Error('Network response was not ok'& response);
+            throw new Error('Network response was not ok' & response);
         }
         const data = await response.json();
         if (data && data.response && data.response.data && data.response.data.length > 0) {
@@ -72,21 +73,21 @@ async function loadDossiers() {
         console.error('There has been a problem with your fetch operation:', error);
     }
 
-    
+
 }
 
 //maak knop voor het gekozen dossier in SELECT
-mySelect.addEventListener('change', async function(){
-    
+mySelect.addEventListener('change', async function () {
+
     var container = document.getElementById("btn-container");
-    container.innerHTML="";
+    container.innerHTML = "";
     var select = mySelect;
     var selectValue = select.value;
 
     var selectedOption = select.options[select.selectedIndex].text;
 
     sessionStorage.setItem('dossierNaam', selectedOption);
-    sessionStorage.setItem('dossierID',selectValue);
+    sessionStorage.setItem('dossierID', selectValue);
 
 
     // Create a button element
@@ -96,8 +97,8 @@ mySelect.addEventListener('change', async function(){
     btn.className = "button1 button";
     btn.addEventListener('click', function () {
         document.getElementById('load-excel').style.display = 'block';
-        document.getElementById ('input-excel').style.display = 'block';
-        });
+        document.getElementById('input-excel').style.display = 'block';
+    });
 
 
 
@@ -144,31 +145,31 @@ async function readExcelFile() {
         // Generate Array with uniqueStanden and apiStanden
         var uniqueStanden = getUniqueValuesFromColumn(excelData.slice(1), 0); // Excluding header
         //console.log (apiStanden);
-        if (apiStanden && apiStanden.response && apiStanden.response.data && apiStanden.response.data.length > 0){
+        if (apiStanden && apiStanden.response && apiStanden.response.data && apiStanden.response.data.length > 0) {
             var excludeSet = new Set(apiStanden.response.data.map(stand => +stand.fieldData.standNrT));
             uniqueStanden = uniqueStanden.filter(stand => !excludeSet.has(+stand));
         }
-        
-        
+
+
         const headerRow = excelData[0];
         const standnummerIndex = headerRow.indexOf('standnummer'); // Adjust 'standnummer' as needed
         const standnaamIndex = headerRow.indexOf('standnaam'); // Adjust 'standnaam' as needed
-        
+
         const standnummerToStandnaam = new Map(excelData.slice(1).map(row => [row[standnummerIndex], row[standnaamIndex]]));
 
         uniqueStanden = uniqueStanden.map(standnummer => {
             return [standnummer, standnummerToStandnaam.get(standnummer) || 'Unknown'];
         });
-        
+
         //console.log(uniqueStanden);
 
         processAllStands(uniqueStanden).then(() => {
             //console.log('Finished processing all stands.');
         });
 
-        
-        
-        
+
+
+
 
 
 
@@ -262,7 +263,7 @@ function generateFinalTable() {
     // Log or further process finalDataArray as needed
     //console.log(finalDataArray);
 
-    
+
 
 }
 
@@ -284,27 +285,39 @@ async function mapDataArray() {
 
 
     // Create a mapping from standnummer to standId for quick lookup
-    const standMapping = new Map(apiStanden.response.data.map(item => [item.fieldData.standNrT, item.fieldData._k1_stand_ID]));
-    //console.log(standMapping);
+    const standMapping = new Map(apiStanden.response.data.map(item => 
+        [
+            isNaN(item.fieldData.standNrT) ? item.fieldData.standNrT : Number(item.fieldData.standNrT), 
+            Number(item.fieldData._k1_stand_ID)
+        ]
+    ));
+    console.log(standMapping);
     // Iterate over finalDataArray to replace standnummer with standId
     finalDataArray.forEach((row, rowIndex) => {
         if (rowIndex === 0) {
             // For header row, add the new column header
             row.push('Dossiernummer');
         } else {
+            var standnummer = row[standnummerIndex];
             // Convert standnummer in the row to number for matching
-            const standnummer = (row[standnummerIndex]);
+            if (isNaN(row[standnummerIndex])) {
+                standnummer = row[standnummerIndex];
+                
+            } else { standnummer = Number(row[standnummerIndex]);
+                 }
+
             if (standMapping.has(standnummer)) {
                 row[standnummerIndex] = standMapping.get(standnummer);
             } else {
                 console.warn(`standId for standnummer "${standnummer}" not found`);
             }
+            
 
             // Add dossiernummer to each row
             row.push(dossierNummer);
         }
     });
-    //console.log(finalDataArray);
+    console.log(finalDataArray);
     // Log or return the updated finalDataArray as needed
 
     const dossierArtikelIndex = finalDataArray[0].findIndex(header => header.toLowerCase() === "artikel volgens ae");
@@ -315,7 +328,7 @@ async function mapDataArray() {
 
     // Create a mapping from standnummer to standId for quick lookup
     const artikelMapping = new Map(apiDossier2Artikelen.response.data.map(item => [item.fieldData.omschrijving_N_aec, item.fieldData._k1_dossier2artikel_ID]));
-    
+
     finalDataArray.forEach((row, rowIndex) => {
         if (rowIndex === 0) {
             return;
@@ -347,7 +360,7 @@ async function mapDataArray() {
 
     //await readExcelFile(); // This should populate excelData and finalDataArray
     displayTableWithApiResponseColumn(); // Display table first
-    await processAllOrdersAndUpdateTable(); // Then process data and update table
+    //await processAllOrdersAndUpdateTable(); // Then process data and update table
 
 
 
@@ -515,10 +528,10 @@ async function fetchapiStanden() {
     try {
         const response = await fetch(apiUrl, requestOptions);
         const data = await response.json();
-        if (data.messages[0].code =="0"){
-        //console.log ("yow");
-            return data; 
-        }else{
+        if (data.messages[0].code == "0") {
+            //console.log ("yow");
+            return data;
+        } else {
             //console.log("nieyow")
             return [];
         }// Assuming the API returns an array of objects with id and name
@@ -528,7 +541,7 @@ async function fetchapiStanden() {
     }
 }
 
-async function makeNewStanden(standNummer,standNaam) {
+async function makeNewStanden(standNummer, standNaam) {
     var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify(
         {
@@ -563,7 +576,7 @@ async function makeNewStanden(standNummer,standNaam) {
     }
 }
 
-async function addDossier2Artikel(standID,aantal,dossier2artikelID) {
+async function addDossier2Artikel(standID, aantal, dossier2artikelID) {
     var dossierNummer = sessionStorage.getItem('dossierID');
     var raw2 = JSON.stringify(
         {
@@ -572,7 +585,7 @@ async function addDossier2Artikel(standID,aantal,dossier2artikelID) {
                 "_k2_dossier_ID": dossierNummer,
                 "_k2_stand_ID": standID,
                 "_k2_dossier2artikel_ID": dossier2artikelID,
-                "aantal":aantal,        
+                "aantal": aantal,
                 "_org0_sth1_ae2_auto3": "0"
             }
         });
@@ -633,7 +646,7 @@ async function getBearerToken() {
 function openPage() {
     if (localStorage.getItem('userName') && localStorage.getItem('passWord')) {
         loadDossiers();
-        
+
     } else {
         document.location.href = 'login-page.html';
     }
@@ -652,12 +665,12 @@ const clearLocalStorageButton = document.getElementById('logout');
 
 clearLocalStorageButton.addEventListener('click', function () {
     clearLocalStorageButton.disabled = true;
-    
+
     // Clear specific local storage items related to user session
     localStorage.removeItem('userName');
     localStorage.removeItem('passWord');
     sessionStorage.clear(); // Clear session storage
-    
+
     // Redirect to login page
     document.location.href = 'login-page.html';
 });
@@ -666,7 +679,7 @@ clearLocalStorageButton.addEventListener('click', function () {
 document.getElementById('deleteRecordsBtn').addEventListener('click', async () => {
     const layout = 'standen2artikelen_calc';
     const baseURL = 'https://fms.alterexpo.be/fmi/data/vLatest/databases/Arnout';
-    
+
     try {
         // Assuming you have a way to securely get the token
         const token = await getBearerToken();
@@ -679,7 +692,7 @@ document.getElementById('deleteRecordsBtn').addEventListener('click', async () =
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                query: [{ "_k2_dossier_ID":4458}]
+                query: [{ "_k2_dossier_ID": 4242 }]
             })
         });
         const findData = await findResponse.json();
