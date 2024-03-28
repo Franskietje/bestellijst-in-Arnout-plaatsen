@@ -360,7 +360,7 @@ async function mapDataArray() {
 
     //await readExcelFile(); // This should populate excelData and finalDataArray
     displayTableWithApiResponseColumn(); // Display table first
-    //await processAllOrdersAndUpdateTable(); // Then process data and update table
+    await processAllOrdersAndUpdateTable(); // Then process data and update table
 
 
 
