@@ -284,8 +284,8 @@ async function mapDataArray() {
 
 
     // Create a mapping from standnummer to standId for quick lookup
-    const standMapping = new Map(apiStanden.response.data.map(item => [+item.fieldData.standNrT, item.fieldData._k1_stand_ID]));
-
+    const standMapping = new Map(apiStanden.response.data.map(item => [item.fieldData.standNrT, item.fieldData._k1_stand_ID]));
+    //console.log(standMapping);
     // Iterate over finalDataArray to replace standnummer with standId
     finalDataArray.forEach((row, rowIndex) => {
         if (rowIndex === 0) {
@@ -293,7 +293,7 @@ async function mapDataArray() {
             row.push('Dossiernummer');
         } else {
             // Convert standnummer in the row to number for matching
-            const standnummer = Number(row[standnummerIndex]);
+            const standnummer = (row[standnummerIndex]);
             if (standMapping.has(standnummer)) {
                 row[standnummerIndex] = standMapping.get(standnummer);
             } else {
@@ -304,6 +304,7 @@ async function mapDataArray() {
             row.push(dossierNummer);
         }
     });
+    //console.log(finalDataArray);
     // Log or return the updated finalDataArray as needed
 
     const dossierArtikelIndex = finalDataArray[0].findIndex(header => header.toLowerCase() === "artikel volgens ae");
@@ -314,7 +315,7 @@ async function mapDataArray() {
 
     // Create a mapping from standnummer to standId for quick lookup
     const artikelMapping = new Map(apiDossier2Artikelen.response.data.map(item => [item.fieldData.omschrijving_N_aec, item.fieldData._k1_dossier2artikel_ID]));
-
+    
     finalDataArray.forEach((row, rowIndex) => {
         if (rowIndex === 0) {
             return;
